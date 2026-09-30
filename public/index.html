@@ -1,43 +1,167 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Data Lokasi API</title>
+    <title>Data Lokasi API - 90s Edition</title>
+    <style>
+        /* Desain Retro 90s Hitam Putih */
+        body {
+            background-color: #ffffff;
+            color: #000000;
+            font-family: 'Courier New', Courier, monospace; 
+            padding: 20px;
+        }
+
+        .container {
+            border: 4px solid #000000; 
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+            box-shadow: 10px 10px 0px #000000; 
+        }
+
+        h1, h3 {
+            text-transform: uppercase;
+            border-bottom: 2px dashed #000000; 
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        input[type="text"] {
+            font-family: 'Courier New', Courier, monospace;
+            border: 2px solid #000000;
+            padding: 10px;
+            width: 100%;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        button {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #000000;
+            color: #ffffff;
+            border: 2px solid #000000;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 16px;
+            text-transform: uppercase;
+        }
+
+        button:hover {
+            background-color: #ffffff;
+            color: #000000;
+        }
+
+        .result-box {
+            border: 2px solid #000000;
+            padding: 15px;
+            background-color: #f4f4f4;
+        }
+
+        .data-row {
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .label {
+            font-weight: bold;
+            display: inline-block;
+            width: 130px;
+        }
+    </style>
 </head>
 <body>
-    
-<h3>Nama: Faid Arya Pamungkas</h3>
-<h3>Nim: 20240140108</h3>
 
-<p>Kota : <span id="lokasi"></span> </p>
+    <div class="container">
+        <h1>[ PENCARI LOKASI ]</h1>
+        <h3>Nama: Faid Arya Pamungkas</h3>
+        <h3>Nim: 20240140108</h3>
 
-<hr>
+        <!-- Tempat Input Kota -->
+        <div class="input-group">
+            <input type="text" id="inputKota" placeholder="KETIK NAMA KOTA...">
+            <button id="btnCari">CARI</button>
+        </div>
 
-<p>
-    Koordinat :
-    <span id="negara"></span>
-</p>
+        <!-- Tempat Menampilkan Hasil -->
+        <div class="result-box">
+            <div class="data-row"><span class="label">LOKASI:</span> <span id="lokasi">[BELUM ADA DATA]</span></div>
+            <div class="data-row"><span class="label">NEGARA:</span> <span id="negara">-</span></div>
+            <div class="data-row"><span class="label">PROVINSI:</span> <span id="provinsi">-</span></div>
+            <div class="data-row"><span class="label">KECAMATAN:</span> <span id="kecamatan">-</span></div>
+            <div class="data-row"><span class="label">LONGITUDE:</span> <span id="longitude">-</span></div>
+            <div class="data-row"><span class="label">LATITUDE:</span> <span id="latitude">-</span></div>
+        </div>
+    </div>
 
-<script>
+    <!-- JavaScript langsung di sini, tidak perlu file terpisah -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const btnCari = document.getElementById('btnCari');
+            const inputKota = document.getElementById('inputKota');
 
-    fetch("/api/lokasi")
-    .then(response => response.json()) 
-    .then(data => {
-        console.log(data);
+            // Event saat tombol CARI diklik
+            btnCari.addEventListener('click', cariLokasi);
 
-    
-        document.getElementById("lokasi").innerHTML = data.kota;
+            // Event saat menekan Enter di input
+            inputKota.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    cariLokasi();
+                }
+            });
 
-     
-        document.getElementById("negara").innerHTML = data.koordinat;
-        
-    })
+            async function cariLokasi() {
+                const namaKota = inputKota.value.trim();
 
-    .catch(error => {
-        console.error(error);
-    });
-</script>
+                if (!namaKota) {
+                    alert('Silakan masukkan nama kota terlebih dahulu!');
+                    return;
+                }
 
+                // Tampilkan loading
+                document.getElementById('lokasi').textContent = 'MENCARI...';
+
+                try {
+                    // Memanggil API endpoint di server Express
+                    const response = await fetch('/api/lokasi?namakota=' + encodeURIComponent(namaKota));
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        // Menampilkan data ke halaman
+                        document.getElementById('lokasi').textContent = data.kota || '-';
+                        document.getElementById('negara').textContent = data.negara || '-';
+                        document.getElementById('provinsi').textContent = data.provinsi || '-';
+                        document.getElementById('kecamatan').textContent = data.kecamatan || '-';
+                        document.getElementById('longitude').textContent = data.lon || '-';
+                        document.getElementById('latitude').textContent = data.lat || '-';
+                    } else {
+                        alert(data.message || 'Terjadi kesalahan');
+                        resetHasil();
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Gagal menghubungi server. Pastikan server sudah berjalan!');
+                    resetHasil();
+                }
+            }
+
+            function resetHasil() {
+                document.getElementById('lokasi').textContent = '[BELUM ADA DATA]';
+                document.getElementById('negara').textContent = '-';
+                document.getElementById('provinsi').textContent = '-';
+                document.getElementById('kecamatan').textContent = '-';
+                document.getElementById('longitude').textContent = '-';
+                document.getElementById('latitude').textContent = '-';
+            }
+        });
+    </script>
 </body>
 </html>
